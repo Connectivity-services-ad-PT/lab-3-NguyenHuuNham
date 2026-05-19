@@ -1,0 +1,164 @@
+openapi: 3.1.0
+info:
+  title: Smart Campus — AI Vision API
+  version: 1.0.0
+  description: |
+    Contract tối giản cho AI Vision service — dùng cho consumer-side smoke test.
+    team-gate gọi AI Vision để nhận diện khuôn mặt tại cổng.
+servers:
+  - url: http://localhost:4011
+    description: Prism mock server (AI Vision)
+tags:
+  - name: detection
+    description: Nhận diện hình ảnh
+  - name: models
+    description: Thông tin model AI
+security:
+  - bearerAuth: []
+paths:
+  /detect:
+    post:
+      tags: [detection]
+      operationId: detectFace
+      summary: Nhận diện khuôn mặt từ ảnh
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [image_url]
+              properties:
+                image_url:
+                  type: string
+                  format: uri
+                  example: https://smart-campus.local/frames/cam-01/frame-001.jpg
+                confidence_threshold:
+                  type: number
+                  minimum: 0.0
+                  maximum: 1.0
+                  default: 0.8
+                  example: 0.8
+            examples:
+              valid_image:
+                value:
+                  image_url: https://smart-campus.local/frames/cam-01/frame-001.jpg
+                  confidence_threshold: 0.8
+      responses:
+        "200":
+          description: Kết quả nhận diện
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [detections, model_version]
+                properties:
+                  detections:
+                    type: array
+                    items:
+                      type: object
+                      required: [label, confidence]
+                      properties:
+                        label:
+                          type: string
+                          example: PERSON-STU-001
+                        confidence:
+                          type: number
+                          minimum: 0.0
+                          maximum: 1.0
+                          example: 0.95
+                  model_version:
+                    type: string
+                    example: v2.1.0
+              examples:
+                detected:
+                  value:
+                    detections:
+                      - label: PERSON-STU-001
+                        confidence: 0.95
+                    model_version: v2.1.0
+                no_detection:
+                  value:
+                    detections: []
+                    model_version: v2.1.0
+        "400":
+          description: Request không hợp lệ
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              examples:
+                invalid_url:
+                  value:
+                    type: https://smart-campus.local/problems/validation-error
+                    title: Validation error
+                    status: 400
+                    detail: image_url must be a valid URI
+                    instance: /detect
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /models:
+    get:
+      tags: [models]
+      operationId: listModels
+      summary: Danh sách model AI đang hoạt động
+      responses:
+        "200":
+          description: Danh sách model
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [models]
+                properties:
+                  models:
+                    type: array
+                    items:
+                      type: object
+                      required: [name, version, status]
+                      properties:
+                        name:
+                          type: string
+                          example: face-recognition
+                        version:
+                          type: string
+                          example: v2.1.0
+                        status:
+                          type: string
+                          enum: [active, inactive]
+                          example: active
+              examples:
+                models:
+                  value:
+                    models:
+                      - name: face-recognition
+                        version: v2.1.0
+                        status: active
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ProblemDetails:
+      type: object
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string

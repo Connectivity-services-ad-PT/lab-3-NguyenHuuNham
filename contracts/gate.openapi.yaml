@@ -1,0 +1,415 @@
+openapi: 3.1.0
+info:
+  title: Smart Campus — Access Gate API
+  version: 1.0.0
+  description: |
+    API quản lý sự kiện ra/vào cổng campus của Smart Campus Operations Platform.
+    Thuộc về team-gate — FIT4110 Lab 03.
+servers:
+  - url: http://localhost:4010
+    description: Prism mock server
+  - url: http://localhost:8000
+    description: Local development server
+tags:
+  - name: access-events
+    description: Sự kiện ra/vào cổng
+  - name: verify
+    description: Xác minh quyền truy cập thẻ
+  - name: system
+    description: Health và thông tin hệ thống
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      tags: [system]
+      operationId: getHealth
+      summary: Kiểm tra trạng thái service
+      security: []
+      responses:
+        "200":
+          description: Service đang hoạt động
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              examples:
+                ok:
+                  value:
+                    status: ok
+                    service: access-gate
+                    version: 1.0.0
+  /access-events:
+    post:
+      tags: [access-events]
+      operationId: createAccessEvent
+      summary: Ghi nhận sự kiện ra/vào cổng
+      description: |
+        Nhận sự kiện quẹt thẻ từ hoặc QR tại cổng campus.
+        Quyết định allow/deny dựa trên danh sách thẻ hợp lệ.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccessEventCreate"
+            examples:
+              allow_entry:
+                value:
+                  card_id: CARD-STU-001
+                  gate_id: GATE-MAIN-01
+                  direction: enter
+                  occurred_at: "2026-05-19T08:00:00+07:00"
+              deny_entry:
+                value:
+                  card_id: CARD-BLK-999
+                  gate_id: GATE-MAIN-01
+                  direction: enter
+                  occurred_at: "2026-05-19T08:01:00+07:00"
+      responses:
+        "201":
+          description: Sự kiện đã được ghi nhận
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessEventCreated"
+              examples:
+                allowed:
+                  value:
+                    event_id: EVT-20260519-0001
+                    card_id: CARD-STU-001
+                    gate_id: GATE-MAIN-01
+                    decision: allow
+                    created_at: "2026-05-19T08:00:01+07:00"
+                denied:
+                  value:
+                    event_id: EVT-20260519-0002
+                    card_id: CARD-BLK-999
+                    gate_id: GATE-MAIN-01
+                    decision: deny
+                    created_at: "2026-05-19T08:01:01+07:00"
+        "400":
+          description: Request không hợp lệ
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              examples:
+                missing_card:
+                  value:
+                    type: https://smart-campus.local/problems/validation-error
+                    title: Validation error
+                    status: 400
+                    detail: card_id is required
+                    instance: /access-events
+        "401":
+          description: Thiếu hoặc sai token
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              examples:
+                unauthorized:
+                  value:
+                    type: https://smart-campus.local/problems/unauthorized
+                    title: Unauthorized
+                    status: 401
+                    detail: Missing or invalid bearer token
+                    instance: /access-events
+        "429":
+          description: Gọi quá nhiều request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              examples:
+                rate_limited:
+                  value:
+                    type: https://smart-campus.local/problems/rate-limit
+                    title: Too Many Requests
+                    status: 429
+                    detail: Rate limit exceeded. Try again later.
+                    instance: /access-events
+    get:
+      tags: [access-events]
+      operationId: listAccessEvents
+      summary: Lấy danh sách sự kiện ra/vào
+      parameters:
+        - in: query
+          name: gate_id
+          required: false
+          schema:
+            type: string
+          example: GATE-MAIN-01
+        - in: query
+          name: decision
+          required: false
+          schema:
+            type: string
+            enum: [allow, deny]
+          example: allow
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 10
+        - in: query
+          name: from
+          required: false
+          schema:
+            type: string
+            format: date-time
+          example: "2026-05-19T00:00:00+07:00"
+      responses:
+        "200":
+          description: Danh sách sự kiện
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AccessEvent"
+                  total:
+                    type: integer
+                    example: 1
+              examples:
+                list:
+                  value:
+                    items:
+                      - event_id: EVT-20260519-0001
+                        card_id: CARD-STU-001
+                        gate_id: GATE-MAIN-01
+                        direction: enter
+                        decision: allow
+                        occurred_at: "2026-05-19T08:00:00+07:00"
+                        created_at: "2026-05-19T08:00:01+07:00"
+                    total: 1
+        "400":
+          description: Query parameter không hợp lệ
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              examples:
+                invalid_limit:
+                  value:
+                    type: https://smart-campus.local/problems/validation-error
+                    title: Validation error
+                    status: 400
+                    detail: limit must be between 1 and 100
+                    instance: /access-events
+  /access-events/verify:
+    post:
+      tags: [verify]
+      operationId: verifyCard
+      summary: Xác minh quyền truy cập của thẻ
+      description: |
+        Kiểm tra một card_id có được phép qua cổng hay không.
+        Trả về decision và lý do.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyRequest"
+            examples:
+              valid_card:
+                value:
+                  card_id: CARD-STU-001
+                  gate_id: GATE-MAIN-01
+              blacklisted_card:
+                value:
+                  card_id: CARD-BLK-999
+                  gate_id: GATE-MAIN-01
+      responses:
+        "200":
+          description: Kết quả xác minh
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyResponse"
+              examples:
+                allowed:
+                  value:
+                    card_id: CARD-STU-001
+                    gate_id: GATE-MAIN-01
+                    decision: allow
+                    reason: Card is active and authorized
+                denied:
+                  value:
+                    card_id: CARD-BLK-999
+                    gate_id: GATE-MAIN-01
+                    decision: deny
+                    reason: Card is blacklisted
+        "400":
+          description: Request không hợp lệ
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              examples:
+                missing_field:
+                  value:
+                    type: https://smart-campus.local/problems/validation-error
+                    title: Validation error
+                    status: 400
+                    detail: card_id is required
+                    instance: /access-events/verify
+        "401":
+          description: Thiếu hoặc sai token
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              examples:
+                unauthorized:
+                  value:
+                    type: https://smart-campus.local/problems/unauthorized
+                    title: Unauthorized
+                    status: 401
+                    detail: Missing or invalid bearer token
+                    instance: /access-events/verify
+        "404":
+          description: Không tìm thấy thẻ trong hệ thống
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+              examples:
+                not_found:
+                  value:
+                    type: https://smart-campus.local/problems/not-found
+                    title: Card not found
+                    status: 404
+                    detail: card_id CARD-XXX-000 not found in registry
+                    instance: /access-events/verify
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AccessDirection:
+      type: string
+      enum: [enter, exit]
+    AccessDecision:
+      type: string
+      enum: [allow, deny]
+    AccessEventCreate:
+      type: object
+      required: [card_id, gate_id, direction, occurred_at]
+      properties:
+        card_id:
+          type: string
+          minLength: 3
+          example: CARD-STU-001
+        gate_id:
+          type: string
+          minLength: 3
+          example: GATE-MAIN-01
+        direction:
+          $ref: "#/components/schemas/AccessDirection"
+        occurred_at:
+          type: string
+          format: date-time
+          example: "2026-05-19T08:00:00+07:00"
+    AccessEvent:
+      allOf:
+        - $ref: "#/components/schemas/AccessEventCreate"
+        - type: object
+          required: [event_id, decision, created_at]
+          properties:
+            event_id:
+              type: string
+              example: EVT-20260519-0001
+            decision:
+              $ref: "#/components/schemas/AccessDecision"
+            created_at:
+              type: string
+              format: date-time
+              example: "2026-05-19T08:00:01+07:00"
+    AccessEventCreated:
+      type: object
+      required: [event_id, card_id, gate_id, decision, created_at]
+      properties:
+        event_id:
+          type: string
+          example: EVT-20260519-0001
+        card_id:
+          type: string
+          example: CARD-STU-001
+        gate_id:
+          type: string
+          example: GATE-MAIN-01
+        decision:
+          $ref: "#/components/schemas/AccessDecision"
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-05-19T08:00:01+07:00"
+    VerifyRequest:
+      type: object
+      required: [card_id, gate_id]
+      properties:
+        card_id:
+          type: string
+          minLength: 3
+          example: CARD-STU-001
+        gate_id:
+          type: string
+          minLength: 3
+          example: GATE-MAIN-01
+    VerifyResponse:
+      type: object
+      required: [card_id, gate_id, decision, reason]
+      properties:
+        card_id:
+          type: string
+          example: CARD-STU-001
+        gate_id:
+          type: string
+          example: GATE-MAIN-01
+        decision:
+          $ref: "#/components/schemas/AccessDecision"
+        reason:
+          type: string
+          example: Card is active and authorized
+    HealthResponse:
+      type: object
+      required: [status, service, version]
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: access-gate
+        version:
+          type: string
+          example: 1.0.0
+    ProblemDetails:
+      type: object
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string

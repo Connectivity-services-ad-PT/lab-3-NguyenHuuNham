@@ -1,0 +1,4 @@
+
+> fit4110_lab03_postman_mock_testing@0.3.0 mock:vision
+> prism mock contracts/ai-vision.openapi.yaml -p 4011 --host 0.0.0.0
+
