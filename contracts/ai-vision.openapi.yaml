@@ -106,6 +106,7 @@ paths:
       tags: [models]
       operationId: listModels
       summary: Danh sách model AI đang hoạt động
+      security: []
       responses:
         "200":
           description: Danh sách model
