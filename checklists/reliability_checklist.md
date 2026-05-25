@@ -1,5 +1,7 @@
 # Reliability Checklist — FIT4110 Lab 03 — team-gate
 
+**Sinh viên thực hiện:** Nguyễn Hữu Nhâm
+
 ## 1. Functional tests
 
 - [x] Có test cho endpoint health.

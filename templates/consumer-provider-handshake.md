@@ -4,6 +4,7 @@
 
 - **Lab:** FIT4110 Lab 03
 - **Ngày:** 2026-05-19
+- **Sinh viên thực hiện:** Nguyễn Hữu Nhâm
 - **Provider team:** team-gate
 - **Consumer team:** team-core
 - **Provider service:** Access Gate API (`contracts/gate.openapi.yaml`)
@@ -93,5 +94,5 @@ Content-Type: application/json
 
 ## Xác nhận
 
-- **Provider representative:** team-gate
+- **Provider representative:** team-gate (Nguyễn Hữu Nhâm)
 - **Consumer representative:** team-core
