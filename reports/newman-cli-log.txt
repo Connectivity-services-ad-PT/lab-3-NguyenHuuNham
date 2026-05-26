@@ -1,0 +1,111 @@
+
+> fit4110_lab03_postman_mock_testing@0.3.0 test:mock
+> newman run postman/collections/FIT4110_lab03_gate.postman_collection.json -e postman/environments/FIT4110_lab03_mock.postman_environment.json --reporters cli,junit --reporter-junit-export reports/newman-report-mock.xml
+
+(node:28712) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+FIT4110 Lab03 — team-gate Access Gate Contract Tests
+
+□ 00_Health
+└ GET /health - service is alive
+  GET http://127.0.0.1:4010/health [200 OK, 365B, 25ms]
+  √  Status code is 200
+  √  Response has status=ok
+  √  Response has service field
+
+□ 01_Functional
+└ POST /access/check - allow entry (happy path)
+  POST http://127.0.0.1:4010/access/check [200 OK, 505B, 18ms]
+  √  Status code is 200
+  √  Response has decision ALLOW
+  √  Response has decisionId
+
+└ POST /access/check - deny entry
+  POST http://127.0.0.1:4010/access/check [200 OK, 496B, 8ms]
+  √  Status code is 200
+  √  Response has decision DENY and reasonCode
+
+└ GET /policies/access - list policies
+  GET http://127.0.0.1:4010/policies/access?limit=10 [200 OK, 742B, 35ms]
+  √  Status code is 200
+  √  Response has items array
+
+└ GET /policies/access/{policyId} - get policy by id
+  GET http://127.0.0.1:4010/policies/access/0196fb3d-4ad7-7d1e-9f49-5d5148d2bac0 [200 OK, 839B, 15ms]
+  √  Status code is 200
+  √  Response has valid policyId
+
+□ 02_Auth
+└ POST /access/check - missing token
+  POST http://127.0.0.1:4010/access/check [401 Unauthorized, 614B, 16ms]
+  √  Unauthorized request returns 401
+
+└ POST /access/check - wrong token
+  POST http://127.0.0.1:4010/access/check [200 OK, 505B, 3ms]
+  √  NOTE: Prism mock does not validate token format — only absence triggers 401
+
+□ 03_Negative
+└ POST /access/check - missing cardId
+  POST http://127.0.0.1:4010/access/check [422 Unprocessable Entity, 783B, 11ms]
+  √  Missing cardId returns 400 or 422
+  √  Error response follows Problem details
+
+└ POST /access/check - invalid direction enum
+  POST http://127.0.0.1:4010/access/check [422 Unprocessable Entity, 825B, 8ms]
+  √  Invalid direction enum returns 400 or 422
+
+└ GET /policies/access/{policyId} - non-existent policy UUID
+  GET http://127.0.0.1:4010/policies/access/00000000-0000-0000-0000-000000000000 [404 Not Found, 623B, 8ms]
+  √  Non-existent policy ID returns 404
+
+□ 04_Boundary_Reliability
+└ GET /policies/access - limit at max boundary (100)
+  GET http://127.0.0.1:4010/policies/access?limit=100 [200 OK, 742B, 4ms]
+  √  Max limit=100 returns 200
+  √  Items count does not exceed limit
+
+└ GET /policies/access - limit out of range (0)
+  GET http://127.0.0.1:4010/policies/access?limit=0 [422 Unprocessable Entity, 697B, 3ms]
+  √  limit=0 is rejected or handled
+
+└ POST /access/check - cardId pattern mismatch
+  POST http://127.0.0.1:4010/access/check [422 Unprocessable Entity, 818B, 6ms]
+  √  Invalid cardId pattern returns 400 or 422
+
+□ 05_Consumer_side_Smoke
+└ Consumer smoke - team-gate calls AI Vision mock (POST /detect)
+  POST http://127.0.0.1:4011/detect [200 OK, 380B, 16ms]
+  √  AI Vision mock returns 200
+  √  Response has detections array
+
+└ Consumer smoke - team-gate lists AI Vision models (GET /models)
+  GET http://127.0.0.1:4011/models [200 OK, 371B, 6ms]
+  √  AI Vision models endpoint returns 200
+  √  Response has models array
+
+□ 06_Local_only_NonFunctional
+└ POST /access/check - response time SLA (local only)
+  POST http://127.0.0.1:4010/access/check [200 OK, 505B, 5ms]
+  √  Skip SLA test on mock environment
+
+┌─────────────────────────┬──────────────────┬─────────────────┐
+│                         │         executed │          failed │
+├─────────────────────────┼──────────────────┼─────────────────┤
+│              iterations │                1 │               0 │
+├─────────────────────────┼──────────────────┼─────────────────┤
+│                requests │               16 │               0 │
+├─────────────────────────┼──────────────────┼─────────────────┤
+│            test-scripts │               16 │               0 │
+├─────────────────────────┼──────────────────┼─────────────────┤
+│      prerequest-scripts │               16 │               0 │
+├─────────────────────────┼──────────────────┼─────────────────┤
+│              assertions │               27 │               0 │
+├─────────────────────────┴──────────────────┴─────────────────┤
+│ total run duration: 1514ms                                   │
+├──────────────────────────────────────────────────────────────┤
+│ total data received: 4.32kB (approx)                         │
+├──────────────────────────────────────────────────────────────┤
+│ average response time: 11ms [min: 3ms, max: 35ms, s.d.: 8ms] │
+└──────────────────────────────────────────────────────────────┘

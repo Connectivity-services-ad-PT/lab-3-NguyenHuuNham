@@ -1,4 +1,4 @@
-name: Contract Lint + Newman Tests — team-gate
+name: Contract Lint + Newman Tests - team-gate
 
 on:
   push:
@@ -26,32 +26,52 @@ jobs:
       - name: Lint OpenAPI contracts (Spectral)
         run: npm run lint
 
-      - name: Start Prism mock server (Access Gate)
-        run: nohup npm run mock:gate > prism-gate.log 2>&1 &
+      - name: Run Newman against Prism mocks
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p reports
 
-      - name: Wait for mock server to be ready
-        run: npx wait-on http://127.0.0.1:4010/health --timeout 30000
+          npm run mock:gate > reports/prism-gate.log 2>&1 &
+          GATE_PID=$!
+          npm run mock:vision > reports/prism-vision.log 2>&1 &
+          VISION_PID=$!
 
-      - name: Start Prism mock server (AI Vision — consumer smoke)
-        run: nohup npm run mock:vision > prism-vision.log 2>&1 &
+          cleanup() {
+            kill "$GATE_PID" "$VISION_PID" 2>/dev/null || true
+            wait "$GATE_PID" "$VISION_PID" 2>/dev/null || true
+          }
+          trap cleanup EXIT
 
-      - name: Wait for AI Vision mock to be ready
-        run: npx wait-on http://127.0.0.1:4011/models --timeout 30000
+          npx wait-on http://127.0.0.1:4010/health --timeout 30000 || {
+            cat reports/prism-gate.log
+            exit 1
+          }
+          npx wait-on http://127.0.0.1:4011/models --timeout 30000 || {
+            cat reports/prism-vision.log
+            exit 1
+          }
 
-      - name: Run Newman on mock environment
-        run: npm run test:mock
+          test_exit=0
+          npm run test:mock 2>&1 | tee reports/newman-cli-log.txt
+          test_exit=${PIPESTATUS[0]}
 
-      - name: Generate HTML report
-        if: always()
-        run: npm run test:html
+          html_exit=0
+          npm run test:html 2>&1 | tee reports/newman-html-cli-log.txt
+          html_exit=${PIPESTATUS[0]}
+
+          if [ "$test_exit" -ne 0 ]; then
+            exit "$test_exit"
+          fi
+          exit "$html_exit"
 
       - name: Show Prism gate log on failure
         if: failure()
-        run: cat prism-gate.log || true
+        run: cat reports/prism-gate.log || true
 
       - name: Show Prism vision log on failure
         if: failure()
-        run: cat prism-vision.log || true
+        run: cat reports/prism-vision.log || true
 
       - name: Upload Newman reports
         if: always()
