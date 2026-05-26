@@ -1,0 +1,715 @@
+{
+  "info": {
+    "name": "FIT4110 Lab03 - Access Gate Core Contract Tests",
+    "description": "Access Gate Core contract tests generated from Postman YAML request exports.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET /health - Core service is alive",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Prefer",
+            "value": "code=200",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "health"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Health response identifies Core Business', function () { const json = pm.response.json(); pm.expect(json.status).to.eql('ok'); pm.expect(json.service).to.eql('core-business'); pm.expect(json).to.have.property('time'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /policies/access - boundary limit 1",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Prefer",
+            "value": "code=200",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/policies/access?limit=1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "policies",
+            "access"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Boundary limit=1 returns a valid page', function () { pm.response.to.have.status(200); const json = pm.response.json(); pm.expect(json.items).to.be.an('array'); pm.expect(json.items.length).to.be.at.most(1); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /access/check - local SLA below 500ms",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Prefer",
+            "value": "code=200",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/access/check",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "access",
+            "check"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cardId\": \"RFID-2026-001\",\n  \"gateId\": \"GATE-01\",\n  \"direction\": \"IN\",\n  \"timestamp\": \"2026-05-10T08:00:00Z\",\n  \"idempotencyKey\": \"0196fb3d-4ad7-7d1e-9f49-5d5148d2babe\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const isLocal = pm.environment.get('env') === 'local';",
+              "pm.test('SLA assertion runs only against local Core service', function () { if (isLocal) { pm.expect(pm.response.responseTime).to.be.below(500); } else { pm.expect(pm.environment.get('env')).to.eql('mock'); } });",
+              "pm.test('Access check remains contract-compatible', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /access/check - missing cardId validation error",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/access/check",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "access",
+            "check"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"gateId\": \"GATE-01\",\n  \"direction\": \"IN\",\n  \"timestamp\": \"2026-05-10T08:00:00Z\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Invalid payload returns a client error', function () { pm.expect([400, 422]).to.include(pm.response.code); });",
+              "pm.test('Validation error has Problem Details shape', function () { const json = pm.response.json(); pm.expect(json).to.have.property('status'); pm.expect(json.status).to.be.within(400, 599); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /access/check - missing token returns 401 or 403",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/access/check",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "access",
+            "check"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cardId\": \"RFID-2026-001\",\n  \"gateId\": \"GATE-01\",\n  \"direction\": \"IN\",\n  \"timestamp\": \"2026-05-10T08:00:00Z\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Unauthorized request returns 401 or 403', function () { pm.expect([401, 403]).to.include(pm.response.code); });",
+              "pm.test('Auth error follows Problem Details when a body is returned', function () { if (pm.response.text()) { const json = pm.response.json(); pm.expect(json.status).to.be.within(400, 599); } });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST Analytics /analytics/access-events - Gate sends hashed access event",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Prefer",
+            "value": "code=202",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{analyticsMockUrl}}/analytics/access-events",
+          "host": [
+            "{{analyticsMockUrl}}"
+          ],
+          "path": [
+            "analytics",
+            "access-events"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"eventId\": \"0196fb3d-4ad7-7d1e-9f49-5d5148d2bad0\",\n  \"cardIdHash\": \"61d54b7e7cc5b7a81c4da0f987b54e8c0f0fc4fe7b1f22b8ee4e1eb9ec6f63db\",\n  \"gateId\": \"GATE-01\",\n  \"direction\": \"IN\",\n  \"decision\": \"ALLOW\",\n  \"checkedAt\": \"2026-05-10T08:00:00Z\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Analytics mock accepts access event', function () { pm.response.to.have.status(202); });",
+              "pm.test('Gate can parse Analytics acknowledgement', function () { const json = pm.response.json(); pm.expect(json).to.have.property('eventId'); pm.expect(json.accepted).to.eql(true); });",
+              "pm.test('Consumer sends privacy-safe cardIdHash only', function () { const body = JSON.parse(pm.request.body.raw); pm.expect(body).to.have.property('cardIdHash'); pm.expect(body).to.not.have.property('cardId'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /access/check - allow or deny decision",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Prefer",
+            "value": "code=200",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/access/check",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "access",
+            "check"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cardId\": \"RFID-2026-001\",\n  \"gateId\": \"GATE-01\",\n  \"direction\": \"IN\",\n  \"timestamp\": \"2026-05-10T08:00:00Z\",\n  \"idempotencyKey\": \"0196fb3d-4ad7-7d1e-9f49-5d5148d2babe\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Decision response matches contract', function () { const json = pm.response.json(); pm.expect(json).to.have.property('decisionId'); pm.expect(['ALLOW', 'DENY']).to.include(json.decision); pm.expect(json).to.have.property('policyId'); pm.expect(json).to.have.property('checkedAt'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /access/check - invalid direction enum",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/access/check",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "access",
+            "check"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cardId\": \"RFID-2026-001\",\n  \"gateId\": \"GATE-01\",\n  \"direction\": \"SIDEWAYS\",\n  \"timestamp\": \"2026-05-10T08:00:00Z\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Enum violation returns a client error', function () { pm.expect([400, 422]).to.include(pm.response.code); });",
+              "pm.test('Error response is parseable by Access Gate', function () { const json = pm.response.json(); pm.expect(json).to.have.property('title'); pm.expect(json).to.have.property('status'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /access/check - invalid token behavior is explicit",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer invalid-token",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/access/check",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "access",
+            "check"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cardId\": \"RFID-2026-001\",\n  \"gateId\": \"GATE-01\",\n  \"direction\": \"IN\",\n  \"timestamp\": \"2026-05-10T08:00:00Z\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const isMock = pm.environment.get('env') === 'mock';",
+              "pm.test('Invalid token behavior is checked without forcing Prism auth response', function () { if (isMock) { pm.expect([200, 401, 403]).to.include(pm.response.code); } else { pm.expect([401, 403]).to.include(pm.response.code); } });",
+              "pm.test('No Prefer header forces auth response', function () { pm.expect(pm.request.headers.has('Prefer')).to.eql(false); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /access/check - optional idempotencyKey is accepted",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Prefer",
+            "value": "code=200",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/access/check",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "access",
+            "check"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cardId\": \"RFID-2026-042\",\n  \"gateId\": \"GATE-03\",\n  \"direction\": \"OUT\",\n  \"timestamp\": \"2026-05-10T17:30:00Z\",\n  \"idempotencyKey\": null\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Nullable idempotencyKey is accepted by contract', function () { pm.response.to.have.status(200); });",
+              "pm.test('Response still includes decision fields', function () { const json = pm.response.json(); pm.expect(['ALLOW', 'DENY']).to.include(json.decision); pm.expect(json).to.have.property('decisionId'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /policies/access - invalid limit query",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/policies/access?limit=101",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "policies",
+            "access"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "101"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Limit above maximum returns a client error', function () { pm.expect([400, 422]).to.include(pm.response.code); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /policies/access - list policy page",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Prefer",
+            "value": "code=200",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/policies/access?status=ACTIVE&limit=20",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "policies",
+            "access"
+          ],
+          "query": [
+            {
+              "key": "status",
+              "value": "ACTIVE"
+            },
+            {
+              "key": "limit",
+              "value": "20"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Policy page uses cursor contract', function () { const json = pm.response.json(); pm.expect(json.items).to.be.an('array'); pm.expect(json).to.have.property('nextCursor'); pm.expect(json).to.have.property('hasMore'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /policies/access/{policyId} - policy detail has discriminator rules",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Prefer",
+            "value": "code=200",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/policies/access/0196fb3d-4ad7-7d1e-9f49-5d5148d2bac0",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "policies",
+            "access",
+            "0196fb3d-4ad7-7d1e-9f49-5d5148d2bac0"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Policy detail contains typed rules', function () { const json = pm.response.json(); pm.expect(json).to.have.property('policyId'); pm.expect(json.rules).to.be.an('array').that.is.not.empty; pm.expect(json.rules[0]).to.have.property('ruleType'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /policies/access/{policyId} - unknown policy returns 404",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Prefer",
+            "value": "code=404",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/policies/access/0196fb3d-4ad7-7d1e-9f49-5d5148d2ffff",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "policies",
+            "access",
+            "0196fb3d-4ad7-7d1e-9f49-5d5148d2ffff"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Unknown policy returns 404', function () { pm.response.to.have.status(404); });",
+              "pm.test('Not found response is a problem object when present', function () { if (pm.response.text()) { const json = pm.response.json(); pm.expect(json.status).to.be.within(400, 599); pm.expect(json).to.have.property('title'); } });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /decisions - list audit decisions",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Prefer",
+            "value": "code=200",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/decisions?limit=20",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "decisions"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "20"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Decision page can be consumed for audit', function () { const json = pm.response.json(); pm.expect(json.items).to.be.an('array'); pm.expect(json).to.have.property('nextCursor'); pm.expect(json).to.have.property('hasMore'); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
