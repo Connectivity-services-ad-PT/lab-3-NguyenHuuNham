@@ -30,13 +30,13 @@ jobs:
         run: nohup npm run mock:gate > prism-gate.log 2>&1 &
 
       - name: Wait for mock server to be ready
-        run: npx wait-on http://localhost:4010/health --timeout 30000
+        run: npx wait-on http://127.0.0.1:4010/health --timeout 30000
 
       - name: Start Prism mock server (AI Vision — consumer smoke)
         run: nohup npm run mock:vision > prism-vision.log 2>&1 &
 
       - name: Wait for AI Vision mock to be ready
-        run: npx wait-on http://localhost:4011/models --timeout 30000
+        run: npx wait-on http://127.0.0.1:4011/models --timeout 30000
 
       - name: Run Newman on mock environment
         run: npm run test:mock
