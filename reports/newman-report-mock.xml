@@ -1,67 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="FIT4110 Lab03 — team-gate Access Gate Contract Tests" tests="16" time="0.398">
-  <testsuite name="00_Health / GET /health - service is alive" id="09e606ab-7f77-49c6-95a4-8f4ac909bfd3" timestamp="2026-05-25T10:33:02.356Z" tests="3" failures="0" errors="0" time="0.064">
-    <testcase name="Status code is 200" time="0.064" classname="00HealthGetHealthServiceIsAlive"/>
-    <testcase name="Response has status=ok" time="0.064" classname="00HealthGetHealthServiceIsAlive"/>
-    <testcase name="Response has service field" time="0.064" classname="00HealthGetHealthServiceIsAlive"/>
+<testsuites name="FIT4110 Lab03 — team-gate Access Gate Contract Tests" tests="16" time="0.141">
+  <testsuite name="00_Health / GET /health - service is alive" id="2262c9bd-967d-4612-aae1-43998fb6e1bd" timestamp="2026-05-26T06:28:42.666Z" tests="3" failures="0" errors="0" time="0.037">
+    <testcase name="Status code is 200" time="0.037" classname="00HealthGetHealthServiceIsAlive"/>
+    <testcase name="Response has status=ok" time="0.037" classname="00HealthGetHealthServiceIsAlive"/>
+    <testcase name="Response has service field" time="0.037" classname="00HealthGetHealthServiceIsAlive"/>
   </testsuite>
-  <testsuite name="01_Functional / POST /access-events - allow entry (happy path)" id="a11adf52-4803-4ed2-8bb2-0d86595d841f" timestamp="2026-05-25T10:33:02.356Z" tests="3" failures="0" errors="0" time="0.034">
-    <testcase name="Status code is 201" time="0.034" classname="01FunctionalPostAccessEventsAllowEntryHappyPath"/>
-    <testcase name="Response has event_id" time="0.034" classname="01FunctionalPostAccessEventsAllowEntryHappyPath"/>
-    <testcase name="Response has decision field" time="0.034" classname="01FunctionalPostAccessEventsAllowEntryHappyPath"/>
+  <testsuite name="01_Functional / POST /access/check - allow entry (happy path)" id="0d22bdb2-9c82-4475-96e6-ac82e9cb3535" timestamp="2026-05-26T06:28:42.666Z" tests="3" failures="0" errors="0" time="0.008">
+    <testcase name="Status code is 200" time="0.008" classname="01FunctionalPostAccessCheckAllowEntryHappyPath"/>
+    <testcase name="Response has decision ALLOW" time="0.008" classname="01FunctionalPostAccessCheckAllowEntryHappyPath"/>
+    <testcase name="Response has decisionId" time="0.008" classname="01FunctionalPostAccessCheckAllowEntryHappyPath"/>
   </testsuite>
-  <testsuite name="01_Functional / POST /access-events - deny entry" id="a5e6e50e-5d6c-44d3-8e74-5da324b92681" timestamp="2026-05-25T10:33:02.356Z" tests="2" failures="0" errors="0" time="0.007">
-    <testcase name="Status code is 201" time="0.007" classname="01FunctionalPostAccessEventsDenyEntry"/>
-    <testcase name="Decision is allow or deny" time="0.007" classname="01FunctionalPostAccessEventsDenyEntry"/>
+  <testsuite name="01_Functional / POST /access/check - deny entry" id="9e6643f0-96a1-4269-8328-47f74f2f169a" timestamp="2026-05-26T06:28:42.666Z" tests="2" failures="0" errors="0" time="0.009">
+    <testcase name="Status code is 200" time="0.009" classname="01FunctionalPostAccessCheckDenyEntry"/>
+    <testcase name="Response has decision DENY and reasonCode" time="0.009" classname="01FunctionalPostAccessCheckDenyEntry"/>
   </testsuite>
-  <testsuite name="01_Functional / GET /access-events - list events" id="fa749e2b-5ce4-4d54-bed6-147eb63c31e8" timestamp="2026-05-25T10:33:02.356Z" tests="3" failures="0" errors="0" time="0.039">
-    <testcase name="Status code is 200" time="0.039" classname="01FunctionalGetAccessEventsListEvents"/>
-    <testcase name="Response has items array" time="0.039" classname="01FunctionalGetAccessEventsListEvents"/>
-    <testcase name="Response has total field" time="0.039" classname="01FunctionalGetAccessEventsListEvents"/>
+  <testsuite name="01_Functional / GET /policies/access - list policies" id="2ebf4898-2ec7-44bf-b525-af7c35145577" timestamp="2026-05-26T06:28:42.666Z" tests="2" failures="0" errors="0" time="0.007">
+    <testcase name="Status code is 200" time="0.007" classname="01FunctionalGetPoliciesAccessListPolicies"/>
+    <testcase name="Response has items array" time="0.007" classname="01FunctionalGetPoliciesAccessListPolicies"/>
   </testsuite>
-  <testsuite name="01_Functional / POST /access-events/verify - allow card" id="e39ba4d4-ceac-4d6c-a6f2-5927d7d31fe5" timestamp="2026-05-25T10:33:02.356Z" tests="2" failures="0" errors="0" time="0.012">
-    <testcase name="Status code is 200" time="0.012" classname="01FunctionalPostAccessEventsVerifyAllowCard"/>
-    <testcase name="Response has decision and reason" time="0.012" classname="01FunctionalPostAccessEventsVerifyAllowCard"/>
+  <testsuite name="01_Functional / GET /policies/access/{policyId} - get policy by id" id="770a55db-bed1-4316-918e-86f0b1cd64f7" timestamp="2026-05-26T06:28:42.666Z" tests="2" failures="0" errors="0" time="0.006">
+    <testcase name="Status code is 200" time="0.006" classname="01FunctionalGetPoliciesAccessPolicyIdGetPolicyById"/>
+    <testcase name="Response has valid policyId" time="0.006" classname="01FunctionalGetPoliciesAccessPolicyIdGetPolicyById"/>
   </testsuite>
-  <testsuite name="02_Auth / POST /access-events - missing token" id="d7423789-509e-416b-a4a4-7068560c08dc" timestamp="2026-05-25T10:33:02.356Z" tests="1" failures="0" errors="0" time="0.015">
-    <testcase name="Unauthorized request returns 401 or 403" time="0.015" classname="02AuthPostAccessEventsMissingToken"/>
+  <testsuite name="02_Auth / POST /access/check - missing token" id="dc065fd7-00b6-4b5b-bc1c-5b087378a41e" timestamp="2026-05-26T06:28:42.666Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="Unauthorized request returns 401" time="0.007" classname="02AuthPostAccessCheckMissingToken"/>
   </testsuite>
-  <testsuite name="02_Auth / POST /access-events - wrong token" id="27a1c644-fe11-4a90-a4ac-05ba7eb9401e" timestamp="2026-05-25T10:33:02.356Z" tests="1" failures="0" errors="0" time="0.005">
-    <testcase name="NOTE: Prism mock does not validate token format — only absence triggers 401" time="0.005" classname="02AuthPostAccessEventsWrongToken"/>
+  <testsuite name="02_Auth / POST /access/check - wrong token" id="4ffd8174-0c28-4f8b-a7c2-543796a5d3aa" timestamp="2026-05-26T06:28:42.666Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="NOTE: Prism mock does not validate token format — only absence triggers 401" time="0.007" classname="02AuthPostAccessCheckWrongToken"/>
   </testsuite>
-  <testsuite name="03_Negative / POST /access-events - missing card_id" id="96c5eb0f-1662-4bbd-9bc7-83a831bfe35c" timestamp="2026-05-25T10:33:02.356Z" tests="2" failures="0" errors="0" time="0.010">
-    <testcase name="Missing card_id returns client error" time="0.010" classname="03NegativePostAccessEventsMissingCardId"/>
-    <testcase name="Error response follows ProblemDetails" time="0.010" classname="03NegativePostAccessEventsMissingCardId"/>
+  <testsuite name="03_Negative / POST /access/check - missing cardId" id="cc42c6b6-e7ad-479b-b26f-f9d5265fba09" timestamp="2026-05-26T06:28:42.666Z" tests="2" failures="0" errors="0" time="0.006">
+    <testcase name="Missing cardId returns 400 or 422" time="0.006" classname="03NegativePostAccessCheckMissingCardId"/>
+    <testcase name="Error response follows Problem details" time="0.006" classname="03NegativePostAccessCheckMissingCardId"/>
   </testsuite>
-  <testsuite name="03_Negative / POST /access-events - invalid direction enum" id="54ae2b02-0460-4529-8cb5-ad883b2e7c8e" timestamp="2026-05-25T10:33:02.356Z" tests="2" failures="0" errors="0" time="0.007">
-    <testcase name="Invalid direction enum returns 400/422" time="0.007" classname="03NegativePostAccessEventsInvalidDirectionEnum"/>
-    <testcase name="ProblemDetails has detail field" time="0.007" classname="03NegativePostAccessEventsInvalidDirectionEnum"/>
+  <testsuite name="03_Negative / POST /access/check - invalid direction enum" id="007dddac-3079-429e-bcf2-f4b4f898deb7" timestamp="2026-05-26T06:28:42.666Z" tests="1" failures="0" errors="0" time="0.005">
+    <testcase name="Invalid direction enum returns 400 or 422" time="0.005" classname="03NegativePostAccessCheckInvalidDirectionEnum"/>
   </testsuite>
-  <testsuite name="03_Negative / POST /access-events/verify - missing card_id" id="26f2dd09-a04a-4cba-8d16-bc46a2ef4b63" timestamp="2026-05-25T10:33:02.356Z" tests="1" failures="0" errors="0" time="0.009">
-    <testcase name="Missing card_id returns 400/422" time="0.009" classname="03NegativePostAccessEventsVerifyMissingCardId"/>
+  <testsuite name="03_Negative / GET /policies/access/{policyId} - non-existent policy UUID" id="9a815908-ca6d-4d35-8f66-01d6c24feac4" timestamp="2026-05-26T06:28:42.666Z" tests="1" failures="0" errors="0" time="0.012">
+    <testcase name="Non-existent policy ID returns 404" time="0.012" classname="03NegativeGetPoliciesAccessPolicyIdNonExistentPolicyUuid"/>
   </testsuite>
-  <testsuite name="04_Boundary_Reliability / GET /access-events - limit at max boundary (100)" id="e74e9a99-8e13-4b6c-8433-4f19aed9a568" timestamp="2026-05-25T10:33:02.356Z" tests="2" failures="0" errors="0" time="0.005">
-    <testcase name="Max limit=100 returns 200" time="0.005" classname="04BoundaryReliabilityGetAccessEventsLimitAtMaxBoundary100"/>
-    <testcase name="Items count does not exceed limit" time="0.005" classname="04BoundaryReliabilityGetAccessEventsLimitAtMaxBoundary100"/>
+  <testsuite name="04_Boundary_Reliability / GET /policies/access - limit at max boundary (100)" id="08e320a8-fbbf-4e1b-b897-b7800882fdb1" timestamp="2026-05-26T06:28:42.666Z" tests="2" failures="0" errors="0" time="0.004">
+    <testcase name="Max limit=100 returns 200" time="0.004" classname="04BoundaryReliabilityGetPoliciesAccessLimitAtMaxBoundary100"/>
+    <testcase name="Items count does not exceed limit" time="0.004" classname="04BoundaryReliabilityGetPoliciesAccessLimitAtMaxBoundary100"/>
   </testsuite>
-  <testsuite name="04_Boundary_Reliability / GET /access-events - limit out of range (0)" id="2b9b3bf2-113e-4f92-bc91-f4ba3e283819" timestamp="2026-05-25T10:33:02.356Z" tests="2" failures="0" errors="0" time="0.008">
-    <testcase name="limit=0 (below minimum) is rejected or handled" time="0.008" classname="04BoundaryReliabilityGetAccessEventsLimitOutOfRange0"/>
-    <testcase name="If 400/422, response follows ProblemDetails" time="0.008" classname="04BoundaryReliabilityGetAccessEventsLimitOutOfRange0"/>
+  <testsuite name="04_Boundary_Reliability / GET /policies/access - limit out of range (0)" id="f6780642-8dc4-4fd2-93e3-8b4d1b25c682" timestamp="2026-05-26T06:28:42.666Z" tests="1" failures="0" errors="0" time="0.004">
+    <testcase name="limit=0 is rejected or handled" time="0.004" classname="04BoundaryReliabilityGetPoliciesAccessLimitOutOfRange0"/>
   </testsuite>
-  <testsuite name="04_Boundary_Reliability / POST /access-events - card_id at min length (3 chars)" id="0423fb6a-9206-4df4-9c85-bcf236121fe3" timestamp="2026-05-25T10:33:02.356Z" tests="2" failures="0" errors="0" time="0.004">
-    <testcase name="Min-length card_id (3 chars) is accepted or rejected by business rule" time="0.004" classname="04BoundaryReliabilityPostAccessEventsCardIdAtMinLength3Chars"/>
-    <testcase name="Response body is valid JSON" time="0.004" classname="04BoundaryReliabilityPostAccessEventsCardIdAtMinLength3Chars"/>
+  <testsuite name="04_Boundary_Reliability / POST /access/check - cardId pattern mismatch" id="abb44b2a-1012-4e98-ad4e-f9c9655a2781" timestamp="2026-05-26T06:28:42.666Z" tests="1" failures="0" errors="0" time="0.009">
+    <testcase name="Invalid cardId pattern returns 400 or 422" time="0.009" classname="04BoundaryReliabilityPostAccessCheckCardIdPatternMismatch"/>
   </testsuite>
-  <testsuite name="05_Consumer_side_Smoke / Consumer smoke - team-gate calls AI Vision mock (POST /detect)" id="8b014ab1-faff-41d2-83b8-048f13601873" timestamp="2026-05-25T10:33:02.356Z" tests="3" failures="0" errors="0" time="0.161">
-    <testcase name="AI Vision mock returns 200" time="0.161" classname="05ConsumerSideSmokeConsumerSmokeTeamGateCallsAiVisionMockPostDetect"/>
-    <testcase name="Response has detections array" time="0.161" classname="05ConsumerSideSmokeConsumerSmokeTeamGateCallsAiVisionMockPostDetect"/>
-    <testcase name="aiVisionMockUrl is configured via environment" time="0.161" classname="05ConsumerSideSmokeConsumerSmokeTeamGateCallsAiVisionMockPostDetect"/>
+  <testsuite name="05_Consumer_side_Smoke / Consumer smoke - team-gate calls AI Vision mock (POST /detect)" id="4c40bdfd-17f3-4f9f-8409-e7062a48278b" timestamp="2026-05-26T06:28:42.666Z" tests="2" failures="0" errors="0" time="0.009">
+    <testcase name="AI Vision mock returns 200" time="0.009" classname="05ConsumerSideSmokeConsumerSmokeTeamGateCallsAiVisionMockPostDetect"/>
+    <testcase name="Response has detections array" time="0.009" classname="05ConsumerSideSmokeConsumerSmokeTeamGateCallsAiVisionMockPostDetect"/>
   </testsuite>
-  <testsuite name="05_Consumer_side_Smoke / Consumer smoke - team-gate lists AI Vision models (GET /models)" id="ea682db5-3a5d-416d-b024-ceea0fb715bb" timestamp="2026-05-25T10:33:02.356Z" tests="2" failures="0" errors="0" time="0.013">
-    <testcase name="AI Vision models endpoint returns 200" time="0.013" classname="05ConsumerSideSmokeConsumerSmokeTeamGateListsAiVisionModelsGetModels"/>
-    <testcase name="Response has models array" time="0.013" classname="05ConsumerSideSmokeConsumerSmokeTeamGateListsAiVisionModelsGetModels"/>
+  <testsuite name="05_Consumer_side_Smoke / Consumer smoke - team-gate lists AI Vision models (GET /models)" id="0dce5b0b-954d-49f0-a801-7cb02cf9a847" timestamp="2026-05-26T06:28:42.666Z" tests="2" failures="0" errors="0" time="0.007">
+    <testcase name="AI Vision models endpoint returns 200" time="0.007" classname="05ConsumerSideSmokeConsumerSmokeTeamGateListsAiVisionModelsGetModels"/>
+    <testcase name="Response has models array" time="0.007" classname="05ConsumerSideSmokeConsumerSmokeTeamGateListsAiVisionModelsGetModels"/>
   </testsuite>
-  <testsuite name="06_Local_only_NonFunctional / POST /access-events - response time SLA (local only)" id="738a9adb-2c74-4705-9b53-d444d104502b" timestamp="2026-05-25T10:33:02.356Z" tests="1" failures="0" errors="0" time="0.005">
-    <testcase name="Skip latency test on mock environment" time="0.005" classname="06LocalOnlyNonFunctionalPostAccessEventsResponseTimeSlaLocalOnly"/>
+  <testsuite name="06_Local_only_NonFunctional / POST /access/check - response time SLA (local only)" id="4d385703-acb7-4089-bfb9-d7a990bee2d6" timestamp="2026-05-26T06:28:42.666Z" tests="1" failures="0" errors="0" time="0.004">
+    <testcase name="Skip SLA test on mock environment" time="0.004" classname="06LocalOnlyNonFunctionalPostAccessCheckResponseTimeSlaLocalOnly"/>
   </testsuite>
 </testsuites>

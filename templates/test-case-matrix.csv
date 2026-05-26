@@ -1,17 +1,17 @@
 ID,Folder,Endpoint,Method,Scenario,Input body / file,Expected status,Response check,Type,Pass/Fail,Evidence
-TC01,00_Health,/health,GET,Service is alive,–,200,"status=ok, service field present",functional,Pass,Newman CLI
-TC02,01_Functional,/access-events,POST,Allow entry happy path,card_id=CARD-STU-001 direction=enter,201,"event_id present, decision in [allow,deny]",functional,Pass,Newman CLI
-TC03,01_Functional,/access-events,POST,Deny entry (blacklisted card),card_id=CARD-BLK-999 direction=enter,201,"decision in [allow,deny]",functional,Pass,Newman CLI
-TC04,01_Functional,/access-events,GET,List events with gate_id filter,gate_id=GATE-MAIN-01 limit=10,200,"items is array, total present",functional,Pass,Newman CLI
-TC05,01_Functional,/access-events/verify,POST,Verify valid card,card_id=CARD-STU-001,200,"decision+reason present",functional,Pass,Newman CLI
-TC06,02_Auth,/access-events,POST,Missing Authorization token,no Authorization header,401,"401 or 403",auth,Pass,Newman CLI
-TC07,02_Auth,/access-events,POST,Wrong/invalid token,Authorization: Bearer invalid-token-xyz,401,"401 or 403",auth,Pass,Newman CLI
-TC08,03_Negative,/access-events,POST,Missing card_id field,body without card_id,400/422,"ProblemDetails: status 400-599",negative,Pass,Newman CLI
-TC09,03_Negative,/access-events,POST,Invalid direction enum,direction=sideways,400/422,"ProblemDetails: detail present",negative,Pass,Newman CLI
-TC10,03_Negative,/access-events/verify,POST,Missing card_id in verify,body without card_id,400/422,"400 or 422",negative,Pass,Newman CLI
-TC11,04_Boundary,/access-events,GET,Limit at max boundary (100),limit=100,200,"items.length <= 100",boundary,Pass,Newman CLI
-TC12,04_Boundary,/access-events,GET,Limit out of range (0),limit=0,200/400,"gracefully handled",boundary,Pass,Newman CLI
-TC13,04_Boundary,/access-events,POST,card_id at minLength=3,card_id=ABC,201/400,"valid JSON response",boundary,Pass,Newman CLI
-TC14,05_Consumer_side_Smoke,/detect,POST,team-gate calls AI Vision mock,image_url valid URL,200,"detections is array",smoke,Pass,Newman CLI
+TC01,00_Health,/health,GET,Service is alive,–,200,"status=ok, service=core-business",functional,Pass,Newman CLI
+TC02,01_Functional,/access/check,POST,Allow entry happy path,cardId=RFID-2026-001 gateId=GATE-01 direction=IN,200,"decision=ALLOW, decisionId present",functional,Pass,Newman CLI
+TC03,01_Functional,/access/check,POST,Deny entry (CARD_EXPIRED),cardId=RFID-2026-001 gateId=GATE-01 direction=IN,200,"decision=DENY, reasonCode=CARD_EXPIRED",functional,Pass,Newman CLI
+TC04,01_Functional,/policies/access,GET,List policies success,limit=10,200,"items is array, hasMore present",functional,Pass,Newman CLI
+TC05,01_Functional,/policies/access/{policyId},GET,Get policy by ID,policyId=0196fb3d-4ad7-7d1e-9f49-5d5148d2bac0,200,"policyId matches, name present",functional,Pass,Newman CLI
+TC06,02_Auth,/access/check,POST,Missing Authorization token,no Authorization header,401,"ProblemDetails: status=401",auth,Pass,Newman CLI
+TC07,02_Auth,/access/check,POST,Wrong/invalid token,Authorization: Bearer invalid-token-xyz,401,"ProblemDetails: status=401 or mock success",auth,Pass,Newman CLI
+TC08,03_Negative,/access/check,POST,Missing cardId field,body without cardId,400,"ProblemDetails: status=400, title present",negative,Pass,Newman CLI
+TC09,03_Negative,/access/check,POST,Invalid direction enum,direction=SIDEWAYS,400,"ProblemDetails: status=400",negative,Pass,Newman CLI
+TC10,03_Negative,/policies/access/{policyId},GET,Non-existent policy UUID,policyId=00000000-0000-0000-0000-000000000000,404,"ProblemDetails: status=404",negative,Pass,Newman CLI
+TC11,04_Boundary,/policies/access,GET,Limit at max boundary (100),limit=100,200,"items.length <= 100",boundary,Pass,Newman CLI
+TC12,04_Boundary,/policies/access,GET,Limit out of range (0),limit=0,200/400,"gracefully handled",boundary,Pass,Newman CLI
+TC13,04_Boundary,/access/check,POST,cardId pattern mismatch,cardId=RFID-123 (invalid pattern),400,"ProblemDetails: status=400",boundary,Pass,Newman CLI
+TC14,05_Consumer_side_Smoke,/detect,POST,team-gate calls AI Vision mock,image_url valid,200,"detections is array",smoke,Pass,Newman CLI
 TC15,05_Consumer_side_Smoke,/models,GET,team-gate lists AI Vision models,–,200,"models is array",smoke,Pass,Newman CLI
-TC16,06_Local_only,/access-events,POST,Response time SLA check,valid body,201,"responseTime < 1000ms (local only)",non-functional,Pass,Newman CLI
+TC16,06_Local_only,/access/check,POST,Response time SLA check,valid body,200,"responseTime < 500ms (local only)",non-functional,Pass,Newman CLI
