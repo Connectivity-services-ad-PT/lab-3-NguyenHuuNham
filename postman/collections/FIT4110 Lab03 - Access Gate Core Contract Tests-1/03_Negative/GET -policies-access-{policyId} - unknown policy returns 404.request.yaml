@@ -1,0 +1,14 @@
+$kind: http-request
+name: GET /policies/access/{policyId} - unknown policy returns 404
+url: "{{baseUrl}}/policies/access/0196fb3d-4ad7-7d1e-9f49-5d5148d2ffff"
+method: GET
+headers:
+  Authorization: Bearer {{authToken}}
+  Prefer: code=404
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Unknown policy returns 404', function () { pm.response.to.have.status(404); });
+      pm.test('Not found response is a problem object when present', function () { if (pm.response.text()) { const json = pm.response.json(); pm.expect(json.status).to.eql(404); } });
+    language: text/javascript
+order: 4000

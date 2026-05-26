@@ -1,6 +1,16 @@
 node_modules/
 .DS_Store
 .env
+.postman/
+.vscode/
+postman/globals/
+postman/collections/FIT4110 Lab03 - */
+postman/environments/FIT4110 Lab03 - *.environment.yaml
 reports/*.xml
 reports/*.html
+!reports/newman-report.xml
+!reports/newman-report.html
+!reports/newman-report-local.xml
+reports/prism-*.log
+reports/*.err.log
 prism.log

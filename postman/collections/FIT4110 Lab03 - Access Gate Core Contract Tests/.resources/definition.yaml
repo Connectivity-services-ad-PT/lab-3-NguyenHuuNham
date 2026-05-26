@@ -1,0 +1,2 @@
+$kind: collection
+description: "Pair 10 contract tests: Access Gate consumer with Core Business provider, plus Analytics consumer-side smoke."

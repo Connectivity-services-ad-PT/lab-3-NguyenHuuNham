@@ -1,0 +1,25 @@
+$kind: http-request
+name: POST /access/check - optional idempotencyKey is accepted
+url: "{{baseUrl}}/access/check"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{authToken}}
+  Prefer: code=200
+body:
+  type: text
+  content: |-
+    {
+      "cardId": "RFID-2026-042",
+      "gateId": "GATE-03",
+      "direction": "OUT",
+      "timestamp": "2026-05-10T17:30:00Z",
+      "idempotencyKey": null
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Nullable idempotencyKey is accepted by contract', function () { pm.response.to.have.status(200); });
+      pm.test('Response still includes decision fields', function () { const json = pm.response.json(); pm.expect(['ALLOW', 'DENY']).to.include(json.decision); pm.expect(json).to.have.property('decisionId'); });
+    language: text/javascript
+order: 2000

@@ -1,0 +1,10 @@
+name: FIT4110 Lab03 - Local
+values:
+  - key: baseUrl
+    value: 'http://localhost:8000'
+  - key: authToken
+    value: lab-token
+  - key: aiVisionMockUrl
+    value: 'http://localhost:4011'
+  - key: tracePrefix
+    value: fit4110-lab03

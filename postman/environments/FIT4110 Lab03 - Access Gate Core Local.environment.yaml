@@ -1,0 +1,14 @@
+name: FIT4110 Lab03 - Access Gate Core Local
+values:
+  - key: env
+    value: local
+  - key: baseUrl
+    value: 'http://localhost:8000'
+  - key: authToken
+    value: local-dev-token
+  - key: teamName
+    value: team-gate
+  - key: analyticsMockUrl
+    value: 'http://localhost:4011'
+  - key: tracePrefix
+    value: fit4110-lab03-gate-core

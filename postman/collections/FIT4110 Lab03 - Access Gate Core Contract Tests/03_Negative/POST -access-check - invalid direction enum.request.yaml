@@ -1,0 +1,23 @@
+$kind: http-request
+name: POST /access/check - invalid direction enum
+url: "{{baseUrl}}/access/check"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{authToken}}
+body:
+  type: text
+  content: |-
+    {
+      "cardId": "RFID-2026-001",
+      "gateId": "GATE-01",
+      "direction": "SIDEWAYS",
+      "timestamp": "2026-05-10T08:00:00Z"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Enum violation returns a client error', function () { pm.expect([400, 422]).to.include(pm.response.code); });
+      pm.test('Error response is parseable by Access Gate', function () { const json = pm.response.json(); pm.expect(json).to.have.property('title'); pm.expect(json).to.have.property('status'); });
+    language: text/javascript
+order: 2000

@@ -1,0 +1,3 @@
+$kind: collection
+name: FIT4110 Lab03 - Access Gate Core Contract Tests
+description: "Pair 10 contract tests: Access Gate consumer with Core Business provider, plus Analytics consumer-side smoke."

@@ -1,0 +1,14 @@
+$kind: http-request
+name: GET /policies/access/{policyId} - policy detail has discriminator rules
+url: "{{baseUrl}}/policies/access/0196fb3d-4ad7-7d1e-9f49-5d5148d2bac0"
+method: GET
+headers:
+  Authorization: Bearer {{authToken}}
+  Prefer: code=200
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () { pm.response.to.have.status(200); });
+      pm.test('Policy detail contains typed rules', function () { const json = pm.response.json(); pm.expect(json).to.have.property('policyId'); pm.expect(json.rules).to.be.an('array').that.is.not.empty; pm.expect(json.rules[0]).to.have.property('ruleType'); });
+    language: text/javascript
+order: 4000

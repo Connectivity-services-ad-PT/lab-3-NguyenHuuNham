@@ -1,0 +1,22 @@
+$kind: http-request
+name: POST /access/check - missing cardId validation error
+url: "{{baseUrl}}/access/check"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{authToken}}
+body:
+  type: text
+  content: |-
+    {
+      "gateId": "GATE-01",
+      "direction": "IN",
+      "timestamp": "2026-05-10T08:00:00Z"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Invalid payload returns a client error', function () { pm.expect([400, 422]).to.include(pm.response.code); });
+      pm.test('Validation error has Problem Details shape', function () { const json = pm.response.json(); pm.expect(json).to.have.property('status'); pm.expect(json.status).to.be.within(400, 599); });
+    language: text/javascript
+order: 1000

@@ -1,0 +1,198 @@
+openapi: 3.1.0
+info:
+  title: Smart Campus - Analytics Access Event API
+  version: 1.0.0
+  description: Minimal Analytics provider contract used by Access Gate consumer-side smoke tests.
+  contact:
+    name: Analytics Service
+    email: fit4110@example.edu.vn
+servers:
+  - url: http://localhost:4011
+    description: Prism mock server for Analytics
+tags:
+  - name: health
+  - name: access-events
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      operationId: getAnalyticsHealth
+      tags: [health]
+      summary: Check Analytics service health
+      description: Public health endpoint used by CI to wait for the Analytics mock server.
+      security: []
+      responses:
+        "200":
+          description: Analytics mock is alive
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+              examples:
+                ok:
+                  value:
+                    status: ok
+                    service: analytics
+                    time: "2026-05-18T08:00:00Z"
+  /analytics/access-events:
+    post:
+      operationId: ingestAccessEvent
+      tags: [access-events]
+      summary: Ingest a privacy-safe access event from Access Gate
+      description: Access Gate hashes cardId with SHA-256 and sends only cardIdHash to Analytics.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccessEventIngestRequest"
+            examples:
+              accepted:
+                value:
+                  eventId: 0196fb3d-4ad7-7d1e-9f49-5d5148d2bad0
+                  cardIdHash: 61d54b7e7cc5b7a81c4da0f987b54e8c0f0fc4fe7b1f22b8ee4e1eb9ec6f63db
+                  gateId: GATE-01
+                  direction: IN
+                  decision: ALLOW
+                  checkedAt: "2026-05-10T08:00:00Z"
+      responses:
+        "202":
+          description: Event accepted for analytics processing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessEventAccepted"
+              examples:
+                accepted:
+                  value:
+                    eventId: 0196fb3d-4ad7-7d1e-9f49-5d5148d2bad0
+                    accepted: true
+                    queuedAt: "2026-05-10T08:00:01Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    HealthStatus:
+      type: object
+      additionalProperties: false
+      required: [status, service, time]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        service:
+          type: string
+          example: analytics
+        time:
+          type: string
+          format: date-time
+    AccessEventIngestRequest:
+      type: object
+      additionalProperties: false
+      required: [eventId, cardIdHash, gateId, direction, decision, checkedAt]
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        cardIdHash:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+          description: SHA-256 hash of the original RFID card id.
+        gateId:
+          type: string
+          pattern: "^GATE-[0-9]{2}$"
+        direction:
+          type: string
+          enum: [IN, OUT]
+        decision:
+          type: string
+          enum: [ALLOW, DENY]
+        checkedAt:
+          type: string
+          format: date-time
+    AccessEventAccepted:
+      type: object
+      additionalProperties: false
+      required: [eventId, accepted, queuedAt]
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        accepted:
+          type: boolean
+        queuedAt:
+          type: string
+          format: date-time
+    Problem:
+      type: object
+      additionalProperties: false
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+          minLength: 3
+          maxLength: 120
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: [string, "null"]
+          maxLength: 500
+        instance:
+          type: [string, "null"]
+          format: uri
+        errors:
+          type: array
+          items:
+            type: object
+            required: [field, code, message]
+            properties:
+              field:
+                type: string
+              code:
+                type: string
+              message:
+                type: string
+  responses:
+    BadRequest:
+      description: Invalid request payload
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: https://campus.local/errors/validation
+            title: Invalid request
+            status: 400
+            detail: cardIdHash must be a SHA-256 hex string
+            instance: https://api.campus.local/analytics/access-events
+            errors:
+              - field: cardIdHash
+                code: PATTERN_MISMATCH
+                message: cardIdHash must contain 64 lowercase hex characters
+    Unauthorized:
+      description: Missing or invalid bearer token
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    InternalServerError:
+      description: Unexpected server error
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"

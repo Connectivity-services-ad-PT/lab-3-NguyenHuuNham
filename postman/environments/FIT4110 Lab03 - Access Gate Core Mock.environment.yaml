@@ -1,0 +1,14 @@
+name: FIT4110 Lab03 - Access Gate Core Mock
+values:
+  - key: env
+    value: mock
+  - key: baseUrl
+    value: 'http://localhost:4010'
+  - key: authToken
+    value: lab-token
+  - key: teamName
+    value: team-gate
+  - key: analyticsMockUrl
+    value: 'http://localhost:4011'
+  - key: tracePrefix
+    value: fit4110-lab03-gate-core

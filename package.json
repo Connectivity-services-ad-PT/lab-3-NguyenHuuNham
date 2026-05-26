@@ -1,22 +1,22 @@
 {
-  "name": "fit4110_lab03_postman_mock_testing",
+  "name": "fit4110_lab03_access_gate_core_contract_tests",
   "version": "0.3.0",
   "private": true,
-  "description": "FIT4110 Lab 03 — team-gate Access Gate Contract Testing",
+  "description": "FIT4110 Lab 03 - Access Gate, Core Business, Analytics contract testing with Postman, Prism, Newman and CI",
   "scripts": {
-    "mock:gate": "prism mock contracts/gate.openapi.yaml -p 4010 --host 0.0.0.0",
-    "mock:vision": "prism mock contracts/ai-vision.openapi.yaml -p 4011 --host 0.0.0.0",
-    "lint": "spectral lint contracts/gate.openapi.yaml contracts/ai-vision.openapi.yaml",
-    "test:mock": "newman run postman/collections/FIT4110_lab03_gate.postman_collection.json -e postman/environments/FIT4110_lab03_mock.postman_environment.json --reporters cli,junit --reporter-junit-export reports/newman-report-mock.xml",
-    "test:local": "newman run postman/collections/FIT4110_lab03_gate.postman_collection.json -e postman/environments/FIT4110_lab03_local.postman_environment.json --reporters cli,junit --reporter-junit-export reports/newman-report-local.xml",
-    "test:html": "newman run postman/collections/FIT4110_lab03_gate.postman_collection.json -e postman/environments/FIT4110_lab03_mock.postman_environment.json --reporters cli,htmlextra --reporter-htmlextra-export reports/newman-report.html"
+    "lint:contract": "spectral lint contracts/access-gate-core.openapi.yaml contracts/analytics.openapi.yaml --format stylish --output reports/contract-lint-report.txt && node -e \"require('fs').appendFileSync('reports/contract-lint-report.txt', 'Spectral lint passed for contracts/access-gate-core.openapi.yaml and contracts/analytics.openapi.yaml\\n')\"",
+    "mock:core": "prism mock contracts/access-gate-core.openapi.yaml -p 4010 --host 0.0.0.0",
+    "mock:analytics": "prism mock contracts/analytics.openapi.yaml -p 4011 --host 0.0.0.0",
+    "mock:iot": "npm run mock:core",
+    "test:mock": "newman run postman/collections/access-gate-core.postman_collection.json -e postman/environments/access-gate-core_mock.postman_environment.json --reporters cli,junit,htmlextra --reporter-junit-export reports/newman-report.xml --reporter-htmlextra-export reports/newman-report.html",
+    "test:local": "newman run postman/collections/access-gate-core.postman_collection.json -e postman/environments/access-gate-core_local.postman_environment.json --reporters cli,junit --reporter-junit-export reports/newman-report-local.xml",
+    "test:html": "npm run test:mock"
   },
   "devDependencies": {
+    "@stoplight/spectral-cli": "^6.15.0",
     "@stoplight/prism-cli": "^5.14.2",
-    "@stoplight/spectral-cli": "^6.14.2",
     "newman": "^6.2.1",
     "newman-reporter-htmlextra": "^1.23.1",
-    "wait-on": "^8.0.1"
+    "wait-on": "^8.0.3"
   }
 }
-

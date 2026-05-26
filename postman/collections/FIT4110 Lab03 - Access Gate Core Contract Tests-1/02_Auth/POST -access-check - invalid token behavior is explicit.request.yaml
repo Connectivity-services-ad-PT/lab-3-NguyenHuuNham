@@ -1,0 +1,24 @@
+$kind: http-request
+name: POST /access/check - invalid token behavior is explicit
+url: "{{baseUrl}}/access/check"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer invalid-token
+body:
+  type: text
+  content: |-
+    {
+      "cardId": "RFID-2026-001",
+      "gateId": "GATE-01",
+      "direction": "IN",
+      "timestamp": "2026-05-10T08:00:00Z"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      const isMock = pm.environment.get('env') === 'mock';
+      pm.test('Invalid token behavior is checked without forcing Prism auth response', function () { if (isMock) { pm.expect([200, 401, 403]).to.include(pm.response.code); } else { pm.expect([401, 403]).to.include(pm.response.code); } });
+      pm.test('No Prefer header forces auth response', function () { pm.expect(pm.request.headers.has('Prefer')).to.eql(false); });
+    language: text/javascript
+order: 2000

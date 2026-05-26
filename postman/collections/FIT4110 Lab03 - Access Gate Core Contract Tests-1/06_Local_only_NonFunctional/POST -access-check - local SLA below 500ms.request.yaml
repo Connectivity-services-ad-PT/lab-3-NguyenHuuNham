@@ -1,0 +1,26 @@
+$kind: http-request
+name: POST /access/check - local SLA below 500ms
+url: "{{baseUrl}}/access/check"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{authToken}}
+  Prefer: code=200
+body:
+  type: text
+  content: |-
+    {
+      "cardId": "RFID-2026-001",
+      "gateId": "GATE-01",
+      "direction": "IN",
+      "timestamp": "2026-05-10T08:00:00Z",
+      "idempotencyKey": "0196fb3d-4ad7-7d1e-9f49-5d5148d2babe"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      const isLocal = pm.environment.get('env') === 'local';
+      pm.test('SLA assertion runs only against local Core service', function () { if (isLocal) { pm.expect(pm.response.responseTime).to.be.below(500); } else { pm.expect(pm.environment.get('env')).to.eql('mock'); } });
+      pm.test('Access check remains contract-compatible', function () { pm.response.to.have.status(200); });
+    language: text/javascript
+order: 1000

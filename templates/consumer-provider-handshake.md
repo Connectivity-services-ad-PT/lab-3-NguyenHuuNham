@@ -1,31 +1,29 @@
-# Consumer–Provider Handshake
+# Consumer-Provider Handshake
 
-## Thông tin chung
+## General information
 
-- **Lab:** FIT4110 Lab 03
-- **Ngày:** 2026-05-26
-- **Sinh viên thực hiện:** Nguyễn Hữu Nhâm
-- **Provider team:** team-core (Core Business)
-- **Consumer team:** team-gate (Access Gate)
-- **Provider service:** Core Business Access Policy API (`contracts/gate.openapi.yaml`)
-- **Consumer service:** Access Gate Service
+- Lab: FIT4110 Lab 03
+- Date: 2026-05-18
+- Provider team: Core Business Service; Analytics Service
+- Consumer team: Access Gate Service
+- Provider service: Core Business access policy API; Analytics access event API
+- Consumer service: Access Gate Service
 
 ## Contract
 
-- **Contract file:** `contracts/gate.openapi.yaml`
-- **Mock base URL:** `http://127.0.0.1:4010`
-- **Auth method:** Bearer Token (`Authorization: Bearer lab-token`)
-- **Endpoint được test:**
-  - `POST /access/check` — Access Gate gọi Core Business realtime để kiểm tra policy ra/vào trước khi mở cổng
-  - `GET /policies/access` — Access Gate lấy danh sách policy ra/vào để đồng bộ cache hoặc audit
+- Core contract file: `contracts/access-gate-core.openapi.yaml`
+- Analytics smoke contract file: `contracts/analytics.openapi.yaml`
+- Core mock base URL: `http://localhost:4010`
+- Analytics mock base URL: `http://localhost:4011`
+- Auth method: Bearer token via `Authorization: Bearer {{authToken}}`
+- Main endpoint tested: `POST /access/check`
+- Consumer-side smoke endpoint tested: `POST /analytics/access-events`
 
-## Smoke test
-
-### Request (Consumer: team-gate → Provider mock: team-core)
+## Smoke test request - Core Business
 
 ```http
 POST /access/check
-Authorization: Bearer lab-token
+Authorization: Bearer <token>
 Content-Type: application/json
 ```
 
@@ -39,7 +37,7 @@ Content-Type: application/json
 }
 ```
 
-### Expected response
+Expected response:
 
 ```json
 {
@@ -52,53 +50,59 @@ Content-Type: application/json
 }
 ```
 
-## Consumer-side smoke test trong collection
-
-Team-gate đóng vai consumer gọi mock của AI Vision (`{{aiVisionMockUrl}}/detect`) trong folder `05_Consumer_side_Smoke`.
-
-### Request (Consumer: team-gate → Provider mock: team-vision)
+## Smoke test request - Analytics
 
 ```http
-POST /detect
-Authorization: Bearer lab-token
+POST /analytics/access-events
+Authorization: Bearer <token>
 Content-Type: application/json
 ```
 
 ```json
 {
-  "image_url": "https://smart-campus.local/frames/cam-01/frame-001.jpg",
-  "confidence_threshold": 0.8
+  "eventId": "0196fb3d-4ad7-7d1e-9f49-5d5148d2bad0",
+  "cardIdHash": "61d54b7e7cc5b7a81c4da0f987b54e8c0f0fc4fe7b1f22b8ee4e1eb9ec6f63db",
+  "gateId": "GATE-01",
+  "direction": "IN",
+  "decision": "ALLOW",
+  "checkedAt": "2026-05-10T08:00:00Z"
 }
 ```
 
-### Expected response
+Expected response:
 
 ```json
 {
-  "detections": [
-    { "label": "PERSON-STU-001", "confidence": 0.95 }
-  ],
-  "model_version": "v2.1.0"
+  "eventId": "0196fb3d-4ad7-7d1e-9f49-5d5148d2bad0",
+  "accepted": true,
+  "queuedAt": "2026-05-10T08:00:01Z"
 }
 ```
 
-## Kết quả
+## Negotiated decisions
 
-- [x] Consumer gọi mock thành công.
-- [x] Consumer parse được field cần dùng (`decision`, `policyId`, `detections`).
-- [x] Consumer hiểu lỗi 4xx/5xx provider trả về (Problem).
-- [x] Có Newman report trong `reports/newman-report-mock.xml` và `reports/newman-report.html`.
+| Issue | Decision | Test/Evidence |
+|---|---|---|
+| SLA for `POST /access/check` | Core should respond within 500ms for local service | `06_Local_only_NonFunctional` |
+| Core timeout/failure behavior | Gate defaults to fail-open, configurable per gate | Documented reliability note |
+| Idempotency | `idempotencyKey` is optional and nullable; provider caches keyed results when present | `04_Boundary_Reliability` |
+| Pagination | Cursor-based pagination with `nextCursor` and `hasMore` | `GET /policies/access`, `GET /decisions` |
+| JSON naming | camelCase fields | All request/response assertions |
+| Errors | Problem Details with optional `errors[]` | Auth and negative tests |
+| Policy rule parsing | `oneOf` plus discriminator `ruleType` | Policy detail test |
+| Analytics privacy | Gate sends `cardIdHash`, not raw `cardId` | Analytics consumer-side smoke test |
 
-## Ghi chú thay đổi hợp đồng
+## Result
 
-| Nội dung | Trước | Sau | Người đồng ý |
-|---|---|---|---|
-| Thay đổi Provider sang Core Business | team-gate là Provider | team-core (Core Business) là Provider | team-gate + team-core |
-| Cập nhật endpoint chính | `POST /access-events` | `POST /access/check` | team-gate + team-core |
-| Thêm endpoint quản lý policy | Không có | `GET /policies/access` | team-gate + team-core |
-| Thao tác lỗi Problem định dạng chuẩn | ProblemDetails cũ | Problem schema mới với `errors` array | team-gate + team-core |
+- [x] Consumer can call Core mock successfully.
+- [x] Consumer can parse the access decision fields it needs.
+- [x] Consumer understands 4xx/5xx Problem Details responses.
+- [x] Consumer can call Analytics mock with privacy-safe `cardIdHash`.
+- [x] Newman report is generated by `npm run test:mock`.
 
-## Xác nhận
+## Sign-off
 
-- **Provider representative:** team-core (Core Business)
-- **Consumer representative:** team-gate (Nguyễn Hữu Nhâm)
+- Provider representative (Core): Core Business Service - Hoang Van Xanh
+- Provider representative (Analytics): Analytics Service - Tran Cong Quan
+- Consumer representative (Gate): Vu Duc Nam
+- Witness (GV/TA): Pending

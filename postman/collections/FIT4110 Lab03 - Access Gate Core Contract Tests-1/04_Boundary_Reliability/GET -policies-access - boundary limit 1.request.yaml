@@ -1,0 +1,12 @@
+$kind: http-request
+name: GET /policies/access - boundary limit 1
+url: "{{baseUrl}}/policies/access?limit=1"
+method: GET
+headers:
+  Authorization: Bearer {{authToken}}
+  Prefer: code=200
+scripts:
+  - type: afterResponse
+    code: pm.test('Boundary limit=1 returns a valid page', function () { pm.response.to.have.status(200); const json = pm.response.json(); pm.expect(json.items).to.be.an('array'); pm.expect(json.items.length).to.be.at.most(1); });
+    language: text/javascript
+order: 1000

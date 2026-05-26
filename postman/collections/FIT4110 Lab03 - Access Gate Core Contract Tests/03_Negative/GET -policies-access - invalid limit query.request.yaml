@@ -1,0 +1,11 @@
+$kind: http-request
+name: GET /policies/access - invalid limit query
+url: "{{baseUrl}}/policies/access?limit=101"
+method: GET
+headers:
+  Authorization: Bearer {{authToken}}
+scripts:
+  - type: afterResponse
+    code: pm.test('Limit above maximum returns a client error', function () { pm.expect([400, 422]).to.include(pm.response.code); });
+    language: text/javascript
+order: 3000

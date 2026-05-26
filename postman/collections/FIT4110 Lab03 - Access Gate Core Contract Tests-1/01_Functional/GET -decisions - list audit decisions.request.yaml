@@ -1,0 +1,14 @@
+$kind: http-request
+name: GET /decisions - list audit decisions
+url: "{{baseUrl}}/decisions?limit=20"
+method: GET
+headers:
+  Authorization: Bearer {{authToken}}
+  Prefer: code=200
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () { pm.response.to.have.status(200); });
+      pm.test('Decision page can be consumed for audit', function () { const json = pm.response.json(); pm.expect(json.items).to.be.an('array'); pm.expect(json).to.have.property('nextCursor'); pm.expect(json).to.have.property('hasMore'); });
+    language: text/javascript
+order: 5000
